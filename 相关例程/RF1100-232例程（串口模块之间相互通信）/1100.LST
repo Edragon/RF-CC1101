@@ -1,0 +1,186 @@
+C51 COMPILER V7.06   1100                                                                  01/19/2011 16:45:28 PAGE 1   
+
+
+C51 COMPILER V7.06, COMPILATION OF MODULE 1100
+OBJECT MODULE PLACED IN 1100.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE 1100.c BROWSE DEBUG OBJECTEXTEND
+
+stmt level    source
+
+   1          #include <reg52.h>
+   2          #include <intrins.h>
+   3          #define         INT8U           unsigned char
+   4          #define         INT16U          unsigned int
+   5          
+   6          sfr   WDT_CONTR =0Xe1;
+   7          
+   8          //***********************************按键********************************************************
+   9          sbit    KEY1    =P3^6;
+  10          sbit    KEY2    =P3^7;
+  11          //***********************************数码管位选**************************************************
+  12          sbit     led    =P2^5;
+  13          
+  14          
+  15          sbit    led3=P2^0;
+  16          sbit    led2=P2^1;
+  17          sbit    led1=P2^2;
+  18          sbit    led0=P2^3;
+  19          
+  20          
+  21          INT8U TxBuf[4];
+  22          INT8U send_f;
+  23          
+  24          
+  25          
+  26          
+  27          //when  i=100.  delay=1.5ms     实测 值 
+  28          static void delay(unsigned int s)
+  29          {
+  30   1              unsigned int i;
+  31   1              for(i=0; i<s; i++);
+  32   1      }
+  33          
+  34          
+  35          void UART_init()
+  36          {
+  37   1              SCON = 0x50;                 /* uart in mode 1 (8 bit), REN=1 */
+  38   1              TMOD = TMOD | 0x20 ;         /* Timer 1 in mode 2 */
+  39   1              TH1  = 0xFD;                 /* 9600 Bds at 11.059MHz */
+  40   1              TL1  = 0xFD;                 /* 9600 Bds at 11.059MHz */
+  41   1              //IE =0x90;
+  42   1              TR1 = 1;                     /* Timer 1 run */
+  43   1      
+  44   1          ET1 =0; 
+  45   1          ES=1;                //允许串行口中断
+  46   1          PS=1;                //设计串行口中断优先级
+  47   1          EA =1;               //单片机中断允许
+  48   1      }
+  49          
+  50          void Sendchar(unsigned char c)       
+  51          {
+  52   1              SBUF=c;                                     
+  53   1              while(TI==0);                                               
+  54   1              TI=0;
+  55   1      }
+C51 COMPILER V7.06   1100                                                                  01/19/2011 16:45:28 PAGE 2   
+
+  56          
+  57          void print_string(unsigned char* p)               //发送字符串     
+  58          {
+  59   1        while(*p !='\0')
+  60   1         {
+  61   2           Sendchar(*p++);
+  62   2         }
+  63   1      }
+  64          
+  65          
+  66          
+  67          //--------------------------------------------------------------------------------------------------
+  68          // 函数名称： com_interrup()串口接收中断处理函数
+  69          // 函数功能： 接收包括起始位'S'在内的十位数据到数据缓冲区
+  70          //--------------------------------------------------------------------------------------------------
+  71          com_interrupt(void) interrupt 4 using 3
+  72          {
+  73   1        
+  74   1      
+  75   1        if(RI)                                //处理接收中断
+  76   1        {
+  77   2           RI=0;                                            //清除中断标志位
+  78   2           TxBuf[2]=SBUF;
+  79   2      
+  80   2                       send_f=1;                            //设置数据发送标志
+  81   2               send_f=1;
+  82   2                       led=1;                                 
+  83   2        }
+  84   1      }
+  85          
+  86          
+  87          
+  88          
+  89          void main(void)
+  90          {
+  91   1              INT8U leng =0;
+  92   1              INT8U i,k=0;
+  93   1              INT8U RxBuf[4]={0};     
+  94   1              INT8U rxcount;
+  95   1              INT8U TxBuf[30];
+  96   1      
+  97   1              led=1;
+  98   1              rxcount=0xff;
+  99   1              TxBuf[2]=2;
+ 100   1              TxBuf[3]=0;
+ 101   1          UART_init();
+ 102   1              P0=0x00;
+ 103   1          led1=0;
+ 104   1              for(i=0; i<30; i++)
+ 105   1                {
+ 106   2                 TxBuf[i]=i;
+ 107   2                 }
+ 108   1              Sendchar(0xA3);  //设置波特率命令
+ 109   1              Sendchar(0x3A);
+ 110   1              Sendchar(0x02);  //设置波特率为9600 
+ 111   1          delay(6000);
+ 112   1              Sendchar(0xA7);  //设置信道命令
+ 113   1              Sendchar(0x7A);
+ 114   1              Sendchar(0x00);  //设置信道为  06 
+ 115   1          delay(6000);
+ 116   1              Sendchar(0xAB);  //设置功率
+ 117   1              Sendchar(0xBA);
+C51 COMPILER V7.06   1100                                                                  01/19/2011 16:45:28 PAGE 3   
+
+ 118   1              Sendchar(0x0A);  //设置功率为10DBM
+ 119   1          delay(6000);
+ 120   1              Sendchar(0xA9);  //设置模块ID号
+ 121   1              Sendchar(0x9A);
+ 122   1              Sendchar(0x00);  //设置模块ID号
+ 123   1              Sendchar(0x01);  //设置ID号
+ 124   1          delay(6000);
+ 125   1          delay(6000);
+ 126   1      //    WDT_CONTR=0x3c;
+ 127   1              while(1)
+ 128   1              {
+ 129   2            WDT_CONTR=0x3c;
+ 130   2            if(KEY1==0)
+ 131   2                {
+ 132   3              delay(10);
+ 133   3                      while(!KEY1)                     //当检测到按键时发送测试数据 
+ 134   3                        {
+ 135   4                        delay(10);
+ 136   4                        }
+ 137   3                        led1=0;
+ 138   3      
+ 139   3                        print_string("abcdefghijklmnopqrstuvwxyzABCD");       //第一贞测试数据  ， 字符串或数据长度不要超过30个字节 
+ 140   3      
+ 141   3                        
+ 142   3                        led1=1;       
+ 143   3                        delay(750);                                      //发送下一贞数据前要延迟6ms左右. 
+ 144   3                        for(i=0;i<23;i++)                  //发送23字节的数据包              
+ 145   3                          {
+ 146   4                        Sendchar(TxBuf[i]);
+ 147   4                          }
+ 148   3                        delay(750);                                      //发送下一贞数据前要延迟6ms左右. 
+ 149   3                        Sendchar(0x66);                //发送单字节                                                             
+ 150   3                 }
+ 151   2             delay(450);
+ 152   2             led1=1;
+ 153   2             delay(100);
+ 154   2      
+ 155   2              }
+ 156   1              
+ 157   1      }
+ 158          
+ 159          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    317    ----
+   CONSTANT SIZE    =     35    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      5      40
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

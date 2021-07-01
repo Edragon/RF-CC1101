@@ -1,0 +1,293 @@
+C51 COMPILER V7.06   MAIN                                                                  05/05/2010 17:44:49 PAGE 1   
+
+
+C51 COMPILER V7.06, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN main.OBJ
+COMPILER INVOKED BY: d:\Keil\C51\BIN\C51.EXE main.c LARGE BROWSE DEBUG OBJECTEXTEND
+
+stmt level    source
+
+   1          #include <reg52.h>
+   2          #include <intrins.h>
+   3          #include "DS18B20.h"
+   4          #include "cc1100.h"
+   5          #include "IO_def.h"
+   6          
+   7          unsigned char ten,i,j; 
+   8          unsigned char bflag;//指示是否需要发送无线
+   9          
+  10          INT8U TxBuf[32];         // 8字节, 如果需要更长的数据包,请正确设置
+  11          
+  12          
+  13          INT8U RxBuf[32];        
+  14          
+  15          INT8U RxBuf[32];
+  16          INT8U RxBuf[32];
+  17          
+  18          unsigned  char  re_buf,back_buf;
+  19          unsigned  char  keybuf;
+  20          
+  21          unsigned char  module_address;
+  22          
+  23          //***************更多功率参数设置可详细参考DATACC1100英文文档中第48-49页的参数表******************
+  24          //INT8U PaTabel[8] = {0x04 ,0x04 ,0x04 ,0x04 ,0x04 ,0x04 ,0x04 ,0x04};  //-30dBm   功率最小
+  25          //INT8U PaTabel[8] = {0x60 ,0x60 ,0x60 ,0x60 ,0x60 ,0x60 ,0x60 ,0x60};  //0dBm
+  26          INT8U PaTabel[8] = {0xC0 ,0xC0 ,0xC0 ,0xC0 ,0xC0 ,0xC0 ,0xC0 ,0xC0};   //10dBm     功率最大
+  27          
+  28          
+  29          INT8U seg[10]={0xC0,0xCF,0xA4,0xB0,0x99,0x92,0x82,0xF8,0x80,0x90}; 
+  30          
+  31          void UART_init()
+  32          {
+  33   1              SCON = 0x50;                 /* uart in mode 1 (8 bit), REN=1 */
+  34   1              TMOD = TMOD | 0x20 ;         /* Timer 1 in mode 2 */
+  35   1              TH1  = 0xFD;                 /* 9600 Bds at 11.059MHz */
+  36   1              TL1  = 0xFD;                 /* 9600 Bds at 11.059MHz */
+  37   1              //IE =0x90;
+  38   1              TR1 = 1;                     /* Timer 1 run */
+  39   1      
+  40   1          ET1 =0; 
+  41   1          ES=1;                //允许串行口中断
+  42   1          PS=1;                //设计串行口中断优先级
+  43   1          EA =1;               //单片机中断允许
+  44   1      }
+  45          
+  46          void Sendchar(unsigned char c)
+  47          {
+  48   1              SBUF=c;                                     
+  49   1              while(TI==0);                                               
+  50   1              TI=0;
+  51   1      }
+  52          
+  53          
+  54          //--------------------------------------------------------------------------------------------------
+  55          // 函数名称： com_interrup()串口接收中断处理函数
+C51 COMPILER V7.06   MAIN                                                                  05/05/2010 17:44:49 PAGE 2   
+
+  56          // 函数功能： 接收包括起始位'S'在内的十位数据到数据缓冲区
+  57          //--------------------------------------------------------------------------------------------------
+  58          com_interrupt(void) interrupt 4 using 3
+  59          {
+  60   1        
+  61   1       unsigned char  re_leng;        
+  62   1       unsigned char newdata;
+  63   1        // char  RECEIVR_buffer;
+  64   1        if(RI)                                //处理接收中断
+  65   1        {
+  66   2           RI=0;    
+  67   2               back_buf=re_buf;                             //清除中断标志位
+  68   2           re_buf=SBUF;
+  69   2           TxBuf[j]=re_buf;
+  70   2           j=j+1;
+  71   2           
+  72   2           if(back_buf==0xa1)                 //检测一帧数据的开始字节
+  73   2                  {
+  74   3                        if(re_buf==0xa2)
+  75   3                           {
+  76   4                                newdata=1;        //检测到一帧数据，设标志为‘1’     
+  77   4                                j=2;
+  78   4                                TxBuf[0]=0xa1;
+  79   4                                TxBuf[1]=0xa2;
+  80   4                                }
+  81   3                         else
+  82   3                            newdata=8;
+  83   3                       }
+  84   2                else
+  85   2                   {
+  86   3                            newdata=8;
+  87   3                       }
+  88   2      
+  89   2                re_leng=TxBuf[9];                      //数据长度
+  90   2      
+  91   2                            
+  92   2                if(j>=10+re_leng+2)
+  93   2                 {
+  94   3                   j=0;
+  95   3                       i=1;                         //一帧数据结束，无线发送标志置‘1’
+  96   3               led1=0;
+  97   3             }        
+  98   2              
+  99   2                      
+ 100   2      // delay(50);
+ 101   2      // BUF=keybuf;
+ 102   2      
+ 103   2      // delay(10);
+ 104   2        }
+ 105   1      }
+ 106          
+ 107          //void print_string(unsigned char* p)
+ 108          //{
+ 109          //while(*p !='\0')
+ 110          //{
+ 111          //  Sendchar(*p++);
+ 112          //}
+ 113          //}
+ 114          
+ 115          
+ 116          
+ 117          
+C51 COMPILER V7.06   MAIN                                                                  05/05/2010 17:44:49 PAGE 3   
+
+ 118          
+ 119          void main()
+ 120          {
+ 121   1      
+ 122   1          INT8U  m,k;
+ 123   1              INT8U leng=4;
+ 124   1              INT8U tf=0;
+ 125   1              INT8U rxcount;
+ 126   1              INT8U need_send;         //可以发送数据标志，‘1’可以发，‘0’不可以发。 
+ 127   1          INT8U module_address0; //车间号
+ 128   1          INT8U module_address1; //模块号
+ 129   1      
+ 130   1      
+ 131   1      //      INT8U TxBuf[64];         // 8字节, 如果需要更长的数据包,请正确设置
+ 132   1      //      INT8U RxBuf[4]; 
+ 133   1          
+ 134   1              module_address=0x07;
+ 135   1              rxcount=0xff;
+ 136   1              TxBuf[31]=0;
+ 137   1          i=0;
+ 138   1              j=0;
+ 139   1              m=0;
+ 140   1              tf=0;
+ 141   1              need_send=0;
+ 142   1          module_address0=0x00;
+ 143   1              module_address1=0x01;
+ 144   1      
+ 145   1              BELL = 0;
+ 146   1              led0=0;
+ 147   1              led1=0;
+ 148   1              P0=seg[0];              
+ 149   1              UART_init();
+ 150   1      
+ 151   1      
+ 152   1              CpuInit();
+ 153   1              POWER_UP_RESET_CC1100();
+ 154   1              halRfWriteRfSettings();
+ 155   1              halSpiWriteBurstReg(CCxxx0_PATABLE, PaTabel, 8);
+ 156   1      
+ 157   1              //TxBuf[0] = 8 ;
+ 158   1              TxBuf[1] = 1 ;
+ 159   1              TxBuf[2] = 1 ;
+ 160   1              halRfSendPacket(TxBuf,4);       // Transmit Tx buffer data
+ 161   1              delay(6000);
+ 162   1      
+ 163   1      
+ 164   1          BELL = 1;   
+ 165   1              led0=1;
+ 166   1              led1=1;
+ 167   1              while (1)
+ 168   1              {
+ 169   2                  
+ 170   2                  //ReadTemperature();
+ 171   2                      //Init_DS18B20();
+ 172   2      
+ 173   2              BELL = 1;
+ 174   2              if(KEY1 ==0 ) 
+ 175   2                      {
+ 176   3      
+ 177   3                          delay(200);
+ 178   3                              if(KEY1==0)
+ 179   3                                {
+C51 COMPILER V7.06   MAIN                                                                  05/05/2010 17:44:49 PAGE 4   
+
+ 180   4                             TxBuf[1] = 1 ;
+ 181   4                                 TxBuf[2] = 0 ;
+ 182   4                                 keybuf=1;
+ 183   4                         led0=0;
+ 184   4                                      P0=seg[0];
+ 185   4                             tf = 1 ; 
+ 186   4                                 }
+ 187   3                              //while(KEY1 ==0);
+ 188   3                  }
+ 189   2                 if(KEY2 ==0 )
+ 190   2                 {
+ 191   3                              delay(200);
+ 192   3                              if(KEY2==0)
+ 193   3                                {
+ 194   4                             TxBuf[1] = 0 ;
+ 195   4                             TxBuf[2] = 1 ;
+ 196   4                                 keybuf=1;
+ 197   4                         led1=0;
+ 198   4                                      P0=seg[0];
+ 199   4                                 tf = 1 ; 
+ 200   4                                 }
+ 201   3                 }
+ 202   2      
+ 203   2                 if (tf==1)
+ 204   2             {        
+ 205   3                  
+ 206   3      //          TxBuf[0]=0xa1;
+ 207   3      //                      TxBuf[1]=0xa2;
+ 208   3      
+ 209   3                              TxBuf[31]=TxBuf[31]+1;          // 发送一个64位的测试信息
+ 210   3      //                      for(k=0;k<2;k++)
+ 211   3      //                      {
+ 212   3                                halRfSendPacket(TxBuf,32);    // Transmit Tx buffer data              
+ 213   3      //                    delay(10);
+ 214   3      //                       }
+ 215   3                              tf=0;
+ 216   3                              tf=0;
+ 217   3      
+ 218   3                 }
+ 219   2      
+ 220   2                      
+ 221   2                  delay(50);                                   //延迟时间需要调试                 
+ 222   2      //        ES=0;     //  关闭串口中断
+ 223   2                      leng =32; // 预计接受8 bytes
+ 224   2      
+ 225   2      
+ 226   2                      if(halRfReceivePacket(RxBuf,&leng))
+ 227   2                        {
+ 228   3                                                      
+ 229   3                              led0=0;
+ 230   3                              led3=0;
+ 231   3      //              BELL = 0;
+ 232   3                              P0=seg[RxBuf[2]];
+ 233   3                      delay(1);
+ 234   3      
+ 235   3      
+ 236   3                              tf=1; 
+ 237   3                              for(k=0;k<31;k++)
+ 238   3                                 {
+ 239   4                              TxBuf[k]=RxBuf[k];  
+ 240   4                                 }
+ 241   3      //                        TxBuf[30]=3;           //设置返回数据长度
+C51 COMPILER V7.06   MAIN                                                                  05/05/2010 17:44:49 PAGE 5   
+
+ 242   3      
+ 243   3                         }
+ 244   2                  delay(100); 
+ 245   2                  ES=1;   //开启串口中断
+ 246   2              m=m+1;
+ 247   2                      if(m>=0xff)
+ 248   2                      {
+ 249   3                        m=0;
+ 250   3                        POWER_UP_RESET_CC1100();
+ 251   3                    halRfWriteRfSettings();
+ 252   3                    halSpiWriteBurstReg(CCxxx0_PATABLE, PaTabel, 8);
+ 253   3                       }
+ 254   2      
+ 255   2                  led0=1;
+ 256   2                      led1=1;
+ 257   2                      led2=1;
+ 258   2                      led3=1;
+ 259   2                      
+ 260   2              }
+ 261   1              
+ 262   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    557    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     90       7
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
