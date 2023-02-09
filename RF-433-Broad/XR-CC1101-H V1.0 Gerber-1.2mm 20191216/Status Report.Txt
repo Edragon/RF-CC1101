@@ -1,0 +1,12 @@
+Output: NC Drill Files
+Type  : NC Drill
+From  : Project [RF-433RX.PrjPCB]
+   Generated File[RF-433RX.TXT]
+   Generated File[RF-433RX.LDP]
+   Generated File[RF-433RX.DRR]
+
+
+Files Generated   : 3
+Documents Printed : 0
+
+Finished Output Generation At 18:35:23 On 2019/12/16

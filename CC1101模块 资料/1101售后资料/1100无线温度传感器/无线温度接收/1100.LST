@@ -1,0 +1,694 @@
+C51 COMPILER V7.06   1100                                                                  12/20/2007 00:50:10 PAGE 1   
+
+
+C51 COMPILER V7.06, COMPILATION OF MODULE 1100
+OBJECT MODULE PLACED IN 1100.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE 1100.c BROWSE DEBUG OBJECTEXTEND
+
+stmt level    source
+
+   1          #include <reg52.h>
+   2          #include <intrins.h>
+   3          #define         INT8U           unsigned char
+   4          #define         INT16U          unsigned int
+   5          
+   6          #define         WRITE_BURST             0x40                                            //连续写入
+   7          #define         READ_SINGLE             0x80                                            //读
+   8          #define         READ_BURST              0xC0                                            //连续读
+   9          #define         BYTES_IN_RXFIFO     0x7F                                                //接收缓冲区的有效字节数
+  10          #define         CRC_OK              0x80                                                //CRC校验通过位标志
+  11          //*****************************************************************************************
+  12          sbit    GDO0    =P1^3;
+  13          sbit    GDO2    =P3^2;
+  14          sbit    MISO    =P1^6;
+  15          sbit    MOSI    =P1^5;
+  16          sbit    SCK             =P1^7;
+  17          sbit    CSN             =P1^2;
+  18          //*****************************************************************************************
+  19          sbit    LED2    =P3^4;
+  20          sbit    LED1    =P3^5;
+  21          sbit    KEY1    =P3^6;
+  22          sbit    KEY2    =P3^7;
+  23          //*****************************************************************************************
+  24          sbit    led3=P2^3;
+  25          sbit    led2=P2^2;
+  26          sbit    led1=P2^1;
+  27          sbit    led0=P2^0;
+  28          char temp[6];
+  29          INT8U seg[10]={0xC0,0xCF,0xA4,0xB0,0x99,0x92,0x82,0xF8,0x80,0x90};         //0~~9段码
+  30          INT8U seg1[10]={0x40,0x4F,0x24,0x30,0x19,0x12,0x02,0x78,0x00,0x10};
+  31          INT8U data temp_data[2]={0x00,0x00};
+  32          INT8U dispaly[8];
+  33          //*****************************************************************************************
+  34          INT8U PaTabel[8] = {0x60 ,0x60 ,0x60 ,0x60 ,0x60 ,0x60 ,0x60 ,0x60};
+  35          //*****************************************************************************************
+  36          void SpiInit(void);
+  37          void CpuInit(void);
+  38          void RESET_CC1100(void);
+  39          void POWER_UP_RESET_CC1100(void);
+  40          void halSpiWriteReg(INT8U addr, INT8U value);
+  41          void halSpiWriteBurstReg(INT8U addr, INT8U *buffer, INT8U count);
+  42          void halSpiStrobe(INT8U strobe);
+  43          INT8U halSpiReadReg(INT8U addr);
+  44          void halSpiReadBurstReg(INT8U addr, INT8U *buffer, INT8U count);
+  45          INT8U halSpiReadStatus(INT8U addr);
+  46          void halRfWriteRfSettings(void);
+  47          void halRfSendPacket(INT8U *txBuffer, INT8U size); 
+  48          INT8U halRfReceivePacket(INT8U *rxBuffer, INT8U *length);  
+  49          void StartUART( void );
+  50          void R_S_Byte(INT8U R_Byte);
+  51          //*****************************************************************************************
+  52          // CC1100 STROBE, CONTROL AND STATUS REGSITER
+  53          #define CCxxx0_IOCFG2       0x00        // GDO2 output pin configuration
+  54          #define CCxxx0_IOCFG1       0x01        // GDO1 output pin configuration
+  55          #define CCxxx0_IOCFG0       0x02        // GDO0 output pin configuration
+C51 COMPILER V7.06   1100                                                                  12/20/2007 00:50:10 PAGE 2   
+
+  56          #define CCxxx0_FIFOTHR      0x03        // RX FIFO and TX FIFO thresholds
+  57          #define CCxxx0_SYNC1        0x04        // Sync word, high INT8U
+  58          #define CCxxx0_SYNC0        0x05        // Sync word, low INT8U
+  59          #define CCxxx0_PKTLEN       0x06        // Packet length
+  60          #define CCxxx0_PKTCTRL1     0x07        // Packet automation control
+  61          #define CCxxx0_PKTCTRL0     0x08        // Packet automation control
+  62          #define CCxxx0_ADDR         0x09        // Device address
+  63          #define CCxxx0_CHANNR       0x0A        // Channel number
+  64          #define CCxxx0_FSCTRL1      0x0B        // Frequency synthesizer control
+  65          #define CCxxx0_FSCTRL0      0x0C        // Frequency synthesizer control
+  66          #define CCxxx0_FREQ2        0x0D        // Frequency control word, high INT8U
+  67          #define CCxxx0_FREQ1        0x0E        // Frequency control word, middle INT8U
+  68          #define CCxxx0_FREQ0        0x0F        // Frequency control word, low INT8U
+  69          #define CCxxx0_MDMCFG4      0x10        // Modem configuration
+  70          #define CCxxx0_MDMCFG3      0x11        // Modem configuration
+  71          #define CCxxx0_MDMCFG2      0x12        // Modem configuration
+  72          #define CCxxx0_MDMCFG1      0x13        // Modem configuration
+  73          #define CCxxx0_MDMCFG0      0x14        // Modem configuration
+  74          #define CCxxx0_DEVIATN      0x15        // Modem deviation setting
+  75          #define CCxxx0_MCSM2        0x16        // Main Radio Control State Machine configuration
+  76          #define CCxxx0_MCSM1        0x17        // Main Radio Control State Machine configuration
+  77          #define CCxxx0_MCSM0        0x18        // Main Radio Control State Machine configuration
+  78          #define CCxxx0_FOCCFG       0x19        // Frequency Offset Compensation configuration
+  79          #define CCxxx0_BSCFG        0x1A        // Bit Synchronization configuration
+  80          #define CCxxx0_AGCCTRL2     0x1B        // AGC control
+  81          #define CCxxx0_AGCCTRL1     0x1C        // AGC control
+  82          #define CCxxx0_AGCCTRL0     0x1D        // AGC control
+  83          #define CCxxx0_WOREVT1      0x1E        // High INT8U Event 0 timeout
+  84          #define CCxxx0_WOREVT0      0x1F        // Low INT8U Event 0 timeout
+  85          #define CCxxx0_WORCTRL      0x20        // Wake On Radio control
+  86          #define CCxxx0_FREND1       0x21        // Front end RX configuration
+  87          #define CCxxx0_FREND0       0x22        // Front end TX configuration
+  88          #define CCxxx0_FSCAL3       0x23        // Frequency synthesizer calibration
+  89          #define CCxxx0_FSCAL2       0x24        // Frequency synthesizer calibration
+  90          #define CCxxx0_FSCAL1       0x25        // Frequency synthesizer calibration
+  91          #define CCxxx0_FSCAL0       0x26        // Frequency synthesizer calibration
+  92          #define CCxxx0_RCCTRL1      0x27        // RC oscillator configuration
+  93          #define CCxxx0_RCCTRL0      0x28        // RC oscillator configuration
+  94          #define CCxxx0_FSTEST       0x29        // Frequency synthesizer calibration control
+  95          #define CCxxx0_PTEST        0x2A        // Production test
+  96          #define CCxxx0_AGCTEST      0x2B        // AGC test
+  97          #define CCxxx0_TEST2        0x2C        // Various test settings
+  98          #define CCxxx0_TEST1        0x2D        // Various test settings
+  99          #define CCxxx0_TEST0        0x2E        // Various test settings
+ 100          
+ 101          // Strobe commands
+ 102          #define CCxxx0_SRES         0x30        // Reset chip.
+ 103          #define CCxxx0_SFSTXON      0x31        // Enable and calibrate frequency synthesizer (if MCSM0.FS_AUTOCAL
+             -=1).
+ 104                                                  // If in RX/TX: Go to a wait state where only the synthesizer is
+ 105                                                  // running (for quick RX / TX turnaround).
+ 106          #define CCxxx0_SXOFF        0x32        // Turn off crystal oscillator.
+ 107          #define CCxxx0_SCAL         0x33        // Calibrate frequency synthesizer and turn it off
+ 108                                                  // (enables quick start).
+ 109          #define CCxxx0_SRX          0x34        // Enable RX. Perform calibration first if coming from IDLE and
+ 110                                                  // MCSM0.FS_AUTOCAL=1.
+ 111          #define CCxxx0_STX          0x35        // In IDLE state: Enable TX. Perform calibration first if
+ 112                                                  // MCSM0.FS_AUTOCAL=1. If in RX state and CCA is enabled:
+ 113                                                  // Only go to TX if channel is clear.
+ 114          #define CCxxx0_SIDLE        0x36        // Exit RX / TX, turn off frequency synthesizer and exit
+ 115                                                  // Wake-On-Radio mode if applicable.
+ 116          #define CCxxx0_SAFC         0x37        // Perform AFC adjustment of the frequency synthesizer
+C51 COMPILER V7.06   1100                                                                  12/20/2007 00:50:10 PAGE 3   
+
+ 117          #define CCxxx0_SWOR         0x38        // Start automatic RX polling sequence (Wake-on-Radio)
+ 118          #define CCxxx0_SPWD         0x39        // Enter power down mode when CSn goes high.
+ 119          #define CCxxx0_SFRX         0x3A        // Flush the RX FIFO buffer.
+ 120          #define CCxxx0_SFTX         0x3B        // Flush the TX FIFO buffer.
+ 121          #define CCxxx0_SWORRST      0x3C        // Reset real time clock.
+ 122          #define CCxxx0_SNOP         0x3D        // No operation. May be used to pad strobe commands to two
+ 123                                                  // INT8Us for simpler software.
+ 124          
+ 125          #define CCxxx0_PARTNUM      0x30
+ 126          #define CCxxx0_VERSION      0x31
+ 127          #define CCxxx0_FREQEST      0x32
+ 128          #define CCxxx0_LQI          0x33
+ 129          #define CCxxx0_RSSI         0x34
+ 130          #define CCxxx0_MARCSTATE    0x35
+ 131          #define CCxxx0_WORTIME1     0x36
+ 132          #define CCxxx0_WORTIME0     0x37
+ 133          #define CCxxx0_PKTSTATUS    0x38
+ 134          #define CCxxx0_VCO_VC_DAC   0x39
+ 135          #define CCxxx0_TXBYTES      0x3A
+ 136          #define CCxxx0_RXBYTES      0x3B
+ 137          
+ 138          #define CCxxx0_PATABLE      0x3E
+ 139          #define CCxxx0_TXFIFO       0x3F
+ 140          #define CCxxx0_RXFIFO       0x3F
+ 141          
+ 142          // RF_SETTINGS is a data structure which contains all relevant CCxxx0 registers
+ 143          typedef struct S_RF_SETTINGS
+ 144          {
+ 145                  INT8U FSCTRL2;          //自已加的
+ 146              INT8U FSCTRL1;   // Frequency synthesizer control.
+ 147              INT8U FSCTRL0;   // Frequency synthesizer control.
+ 148              INT8U FREQ2;     // Frequency control word, high INT8U.
+ 149              INT8U FREQ1;     // Frequency control word, middle INT8U.
+ 150              INT8U FREQ0;     // Frequency control word, low INT8U.
+ 151              INT8U MDMCFG4;   // Modem configuration.
+ 152              INT8U MDMCFG3;   // Modem configuration.
+ 153              INT8U MDMCFG2;   // Modem configuration.
+ 154              INT8U MDMCFG1;   // Modem configuration.
+ 155              INT8U MDMCFG0;   // Modem configuration.
+ 156              INT8U CHANNR;    // Channel number.
+ 157              INT8U DEVIATN;   // Modem deviation setting (when FSK modulation is enabled).
+ 158              INT8U FREND1;    // Front end RX configuration.
+ 159              INT8U FREND0;    // Front end RX configuration.
+ 160              INT8U MCSM0;     // Main Radio Control State Machine configuration.
+ 161              INT8U FOCCFG;    // Frequency Offset Compensation Configuration.
+ 162              INT8U BSCFG;     // Bit synchronization Configuration.
+ 163              INT8U AGCCTRL2;  // AGC control.
+ 164                  INT8U AGCCTRL1;  // AGC control.
+ 165              INT8U AGCCTRL0;  // AGC control.
+ 166              INT8U FSCAL3;    // Frequency synthesizer calibration.
+ 167              INT8U FSCAL2;    // Frequency synthesizer calibration.
+ 168                  INT8U FSCAL1;    // Frequency synthesizer calibration.
+ 169              INT8U FSCAL0;    // Frequency synthesizer calibration.
+ 170              INT8U FSTEST;    // Frequency synthesizer calibration control
+ 171              INT8U TEST2;     // Various test settings.
+ 172              INT8U TEST1;     // Various test settings.
+ 173              INT8U TEST0;     // Various test settings.
+ 174              INT8U IOCFG2;    // GDO2 output pin configuration
+ 175              INT8U IOCFG0;    // GDO0 output pin configuration
+ 176              INT8U PKTCTRL1;  // Packet automation control.
+ 177              INT8U PKTCTRL0;  // Packet automation control.
+ 178              INT8U ADDR;      // Device address.
+C51 COMPILER V7.06   1100                                                                  12/20/2007 00:50:10 PAGE 4   
+
+ 179              INT8U PKTLEN;    // Packet length.
+ 180          } RF_SETTINGS;
+ 181          
+ 182          /////////////////////////////////////////////////////////////////
+ 183          const RF_SETTINGS rfSettings = 
+ 184          {
+ 185                  0x00,
+ 186              0x08,   // FSCTRL1   Frequency synthesizer control.
+ 187              0x00,   // FSCTRL0   Frequency synthesizer control.
+ 188              0x10,   // FREQ2     Frequency control word, high byte.
+ 189              0xA7,   // FREQ1     Frequency control word, middle byte.
+ 190              0x62,   // FREQ0     Frequency control word, low byte.
+ 191              0x5B,   // MDMCFG4   Modem configuration.
+ 192              0xF8,   // MDMCFG3   Modem configuration.
+ 193              0x03,   // MDMCFG2   Modem configuration.
+ 194              0x22,   // MDMCFG1   Modem configuration.
+ 195              0xF8,   // MDMCFG0   Modem configuration.
+ 196          
+ 197              0x00,   // CHANNR    Channel number.
+ 198              0x47,   // DEVIATN   Modem deviation setting (when FSK modulation is enabled).
+ 199              0xB6,   // FREND1    Front end RX configuration.
+ 200              0x10,   // FREND0    Front end RX configuration.
+ 201              0x18,   // MCSM0     Main Radio Control State Machine configuration.
+ 202              0x1D,   // FOCCFG    Frequency Offset Compensation Configuration.
+ 203              0x1C,   // BSCFG     Bit synchronization Configuration.
+ 204              0xC7,   // AGCCTRL2  AGC control.
+ 205              0x00,   // AGCCTRL1  AGC control.
+ 206              0xB2,   // AGCCTRL0  AGC control.
+ 207          
+ 208              0xEA,   // FSCAL3    Frequency synthesizer calibration.
+ 209              0x2A,   // FSCAL2    Frequency synthesizer calibration.
+ 210              0x00,   // FSCAL1    Frequency synthesizer calibration.
+ 211              0x11,   // FSCAL0    Frequency synthesizer calibration.
+ 212              0x59,   // FSTEST    Frequency synthesizer calibration.
+ 213              0x81,   // TEST2     Various test settings.
+ 214              0x35,   // TEST1     Various test settings.
+ 215              0x09,   // TEST0     Various test settings.
+ 216              0x0B,   // IOCFG2    GDO2 output pin configuration.
+ 217              0x06,   // IOCFG0D   GDO0 output pin configuration. Refer to SmartRF?Studio User Manual for detailed p
+             -seudo register explanation.
+ 218          
+ 219              0x04,   // PKTCTRL1  Packet automation control.
+ 220              0x05,   // PKTCTRL0  Packet automation control.
+ 221              0x00,   // ADDR      Device address.
+ 222              0x0c    // PKTLEN    Packet length.
+ 223          };
+ 224          //*****************************************************************************************
+ 225          //函数名：delay(unsigned int s)
+ 226          //输入：时间
+ 227          //输出：无
+ 228          //功能描述：普通廷时,内部用
+ 229          //*****************************************************************************************             
+ 230          static void delay(unsigned int s)
+ 231          {
+ 232   1              unsigned int i;
+ 233   1              for(i=0; i<s; i++);
+ 234   1              for(i=0; i<s; i++);
+ 235   1      }
+ 236          
+ 237          //*****************************************************************************************
+ 238           void delay1(   INT16U i)
+ 239          {
+C51 COMPILER V7.06   1100                                                                  12/20/2007 00:50:10 PAGE 5   
+
+ 240   1              for(;i>0;i--);   
+ 241   1      }
+ 242          void halWait(INT16U timeout) {
+ 243   1          do {
+ 244   2              _nop_();
+ 245   2                      _nop_();
+ 246   2                      _nop_();
+ 247   2                      _nop_();
+ 248   2                      _nop_();
+ 249   2                      _nop_();
+ 250   2                      _nop_();
+ 251   2                      _nop_();
+ 252   2                      _nop_();
+ 253   2                      _nop_();
+ 254   2                      _nop_();
+ 255   2                      _nop_();
+ 256   2                      _nop_();
+ 257   2                      _nop_();
+ 258   2                      _nop_(); 
+ 259   2          } while (--timeout);
+ 260   1      }
+ 261          
+ 262          
+ 263          void SpiInit(void)
+ 264          {
+ 265   1              CSN=0;
+ 266   1              SCK=0;
+ 267   1              CSN=1;
+ 268   1      }
+ 269          
+ 270          /*****************************************************************************************
+ 271          //函数名：CpuInit()
+ 272          //输入：无
+ 273          //输出：无
+ 274          //功能描述：SPI初始化程序
+ 275          /*****************************************************************************************/
+ 276          void CpuInit(void)
+ 277          {
+ 278   1              SpiInit();
+ 279   1              delay(5000);
+ 280   1      }
+ 281                  
+ 282          
+ 283          //*****************************************************************************************
+ 284          //函数名：SpisendByte(INT8U dat)
+ 285          //输入：发送的数据
+ 286          //输出：无
+ 287          //功能描述：SPI发送一个字节
+ 288          //*****************************************************************************************
+ 289          INT8U SpiTxRxByte(INT8U dat)
+ 290          {
+ 291   1              INT8U i,temp;
+ 292   1              temp = 0;
+ 293   1              
+ 294   1              SCK = 0;
+ 295   1              for(i=0; i<8; i++)
+ 296   1              {
+ 297   2                      if(dat & 0x80)
+ 298   2                      {
+ 299   3                              MOSI = 1;
+ 300   3                      }
+ 301   2                      else MOSI = 0;
+C51 COMPILER V7.06   1100                                                                  12/20/2007 00:50:10 PAGE 6   
+
+ 302   2                      dat <<= 1;
+ 303   2      
+ 304   2                      SCK = 1; 
+ 305   2                      _nop_();
+ 306   2                      _nop_();
+ 307   2      
+ 308   2                      temp <<= 1;
+ 309   2                      if(MISO)temp++; 
+ 310   2                      SCK = 0;
+ 311   2                      _nop_();
+ 312   2                      _nop_();        
+ 313   2              }
+ 314   1              return temp;
+ 315   1      }
+ 316          
+ 317          //*****************************************************************************************
+ 318          //函数名：void RESET_CC1100(void)
+ 319          //输入：无
+ 320          //输出：无
+ 321          //功能描述：复位CC1100
+ 322          //*****************************************************************************************
+ 323          void RESET_CC1100(void) 
+ 324          {
+ 325   1              CSN = 0; 
+ 326   1              while (MISO);
+ 327   1          SpiTxRxByte(CCxxx0_SRES);           //写入复位命令
+ 328   1              while (MISO); 
+ 329   1          CSN = 1; 
+ 330   1      }
+ 331          
+ 332          //*****************************************************************************************
+ 333          //函数名：void POWER_UP_RESET_CC1100(void) 
+ 334          //输入：无
+ 335          //输出：无
+ 336          //功能描述：上电复位CC1100
+ 337          //*****************************************************************************************
+ 338          void POWER_UP_RESET_CC1100(void) 
+ 339          {
+ 340   1              CSN = 1; 
+ 341   1              halWait(1); 
+ 342   1              CSN = 0; 
+ 343   1              halWait(1); 
+ 344   1              CSN = 1; 
+ 345   1              halWait(41); 
+ 346   1              RESET_CC1100();                 //复位CC1100
+ 347   1      }
+ 348          
+ 349          //*****************************************************************************************
+ 350          //函数名：void halSpiWriteReg(INT8U addr, INT8U value)
+ 351          //输入：地址和配置字
+ 352          //输出：无
+ 353          //功能描述：SPI写寄存器
+ 354          //*****************************************************************************************
+ 355          void halSpiWriteReg(INT8U addr, INT8U value) 
+ 356          {
+ 357   1          CSN = 0;
+ 358   1          while (MISO);
+ 359   1          SpiTxRxByte(addr);          //写地址
+ 360   1          SpiTxRxByte(value);         //写入配置
+ 361   1          CSN = 1;
+ 362   1      }
+ 363          
+C51 COMPILER V7.06   1100                                                                  12/20/2007 00:50:10 PAGE 7   
+
+ 364          //*****************************************************************************************
+ 365          //函数名：void halSpiWriteBurstReg(INT8U addr, INT8U *buffer, INT8U count)
+ 366          //输入：地址，写入缓冲区，写入个数
+ 367          //输出：无
+ 368          //功能描述：SPI连续写配置寄存器
+ 369          //*****************************************************************************************
+ 370          void halSpiWriteBurstReg(INT8U addr, INT8U *buffer, INT8U count) 
+ 371          {
+ 372   1          INT8U i, temp;
+ 373   1              temp = addr | WRITE_BURST;
+ 374   1          CSN = 0;
+ 375   1          while (MISO);
+ 376   1          SpiTxRxByte(temp);
+ 377   1          for (i = 0; i < count; i++)
+ 378   1              {
+ 379   2              SpiTxRxByte(buffer[i]);
+ 380   2          }
+ 381   1          CSN = 1;
+ 382   1      }
+ 383          
+ 384          //*****************************************************************************************
+ 385          //函数名：void halSpiStrobe(INT8U strobe)
+ 386          //输入：命令
+ 387          //输出：无
+ 388          //功能描述：SPI写命令
+ 389          //*****************************************************************************************
+ 390          void halSpiStrobe(INT8U strobe) 
+ 391          {
+ 392   1          CSN = 0;
+ 393   1          while (MISO);
+ 394   1          SpiTxRxByte(strobe);                //写入命令
+ 395   1          CSN = 1;
+ 396   1      }
+ 397          
+ 398          
+ 399          
+ 400          
+ 401          
+ 402          //*****************************************************************************************
+ 403          //函数名：INT8U halSpiReadReg(INT8U addr)
+ 404          //输入：地址
+ 405          //输出：该寄存器的配置字
+ 406          //功能描述：SPI读寄存器
+ 407          //*****************************************************************************************
+ 408          INT8U halSpiReadReg(INT8U addr) 
+ 409          {
+ 410   1              INT8U temp, value;
+ 411   1          temp = addr|READ_SINGLE;//读寄存器命令
+ 412   1              CSN = 0;
+ 413   1              while (MISO);
+ 414   1              SpiTxRxByte(temp);
+ 415   1              value = SpiTxRxByte(0);
+ 416   1              CSN = 1;
+ 417   1              return value;
+ 418   1      }
+ 419          
+ 420          
+ 421          //*****************************************************************************************
+ 422          //函数名：void halSpiReadBurstReg(INT8U addr, INT8U *buffer, INT8U count)
+ 423          //输入：地址，读出数据后暂存的缓冲区，读出配置个数
+ 424          //输出：无
+ 425          //功能描述：SPI连续写配置寄存器
+C51 COMPILER V7.06   1100                                                                  12/20/2007 00:50:10 PAGE 8   
+
+ 426          //*****************************************************************************************
+ 427          void halSpiReadBurstReg(INT8U addr, INT8U *buffer, INT8U count) 
+ 428          {
+ 429   1          INT8U i,temp;
+ 430   1              temp = addr | READ_BURST;               //写入要读的配置寄存器地址和读命令
+ 431   1          CSN = 0;
+ 432   1          while (MISO);
+ 433   1              SpiTxRxByte(temp);   
+ 434   1          for (i = 0; i < count; i++) 
+ 435   1              {
+ 436   2              buffer[i] = SpiTxRxByte(0);
+ 437   2          }
+ 438   1          CSN = 1;
+ 439   1      }
+ 440          
+ 441          
+ 442          //*****************************************************************************************
+ 443          //函数名：INT8U halSpiReadReg(INT8U addr)
+ 444          //输入：地址
+ 445          //输出：该状态寄存器当前值
+ 446          //功能描述：SPI读状态寄存器
+ 447          //*****************************************************************************************
+ 448          INT8U halSpiReadStatus(INT8U addr) 
+ 449          {
+ 450   1          INT8U value,temp;
+ 451   1              temp = addr | READ_BURST;               //写入要读的状态寄存器的地址同时写入读命令
+ 452   1          CSN = 0;
+ 453   1          while (MISO);
+ 454   1          SpiTxRxByte(temp);
+ 455   1              value = SpiTxRxByte(0);
+ 456   1              CSN = 1;
+ 457   1              return value;
+ 458   1      }
+ 459          //*****************************************************************************************
+ 460          //函数名：void halRfWriteRfSettings(RF_SETTINGS *pRfSettings)
+ 461          //输入：无
+ 462          //输出：无
+ 463          //功能描述：配置CC1100的寄存器
+ 464          //*****************************************************************************************
+ 465          void halRfWriteRfSettings(void) 
+ 466          {
+ 467   1      
+ 468   1              halSpiWriteReg(CCxxx0_FSCTRL0,  rfSettings.FSCTRL2);//自已加的
+ 469   1          // Write register settings
+ 470   1          halSpiWriteReg(CCxxx0_FSCTRL1,  rfSettings.FSCTRL1);
+ 471   1          halSpiWriteReg(CCxxx0_FSCTRL0,  rfSettings.FSCTRL0);
+ 472   1          halSpiWriteReg(CCxxx0_FREQ2,    rfSettings.FREQ2);
+ 473   1          halSpiWriteReg(CCxxx0_FREQ1,    rfSettings.FREQ1);
+ 474   1          halSpiWriteReg(CCxxx0_FREQ0,    rfSettings.FREQ0);
+ 475   1          halSpiWriteReg(CCxxx0_MDMCFG4,  rfSettings.MDMCFG4);
+ 476   1          halSpiWriteReg(CCxxx0_MDMCFG3,  rfSettings.MDMCFG3);
+ 477   1          halSpiWriteReg(CCxxx0_MDMCFG2,  rfSettings.MDMCFG2);
+ 478   1          halSpiWriteReg(CCxxx0_MDMCFG1,  rfSettings.MDMCFG1);
+ 479   1          halSpiWriteReg(CCxxx0_MDMCFG0,  rfSettings.MDMCFG0);
+ 480   1          halSpiWriteReg(CCxxx0_CHANNR,   rfSettings.CHANNR);
+ 481   1          halSpiWriteReg(CCxxx0_DEVIATN,  rfSettings.DEVIATN);
+ 482   1          halSpiWriteReg(CCxxx0_FREND1,   rfSettings.FREND1);
+ 483   1          halSpiWriteReg(CCxxx0_FREND0,   rfSettings.FREND0);
+ 484   1          halSpiWriteReg(CCxxx0_MCSM0 ,   rfSettings.MCSM0 );
+ 485   1          halSpiWriteReg(CCxxx0_FOCCFG,   rfSettings.FOCCFG);
+ 486   1          halSpiWriteReg(CCxxx0_BSCFG,    rfSettings.BSCFG);
+ 487   1          halSpiWriteReg(CCxxx0_AGCCTRL2, rfSettings.AGCCTRL2);
+C51 COMPILER V7.06   1100                                                                  12/20/2007 00:50:10 PAGE 9   
+
+ 488   1              halSpiWriteReg(CCxxx0_AGCCTRL1, rfSettings.AGCCTRL1);
+ 489   1          halSpiWriteReg(CCxxx0_AGCCTRL0, rfSettings.AGCCTRL0);
+ 490   1          halSpiWriteReg(CCxxx0_FSCAL3,   rfSettings.FSCAL3);
+ 491   1              halSpiWriteReg(CCxxx0_FSCAL2,   rfSettings.FSCAL2);
+ 492   1              halSpiWriteReg(CCxxx0_FSCAL1,   rfSettings.FSCAL1);
+ 493   1          halSpiWriteReg(CCxxx0_FSCAL0,   rfSettings.FSCAL0);
+ 494   1          halSpiWriteReg(CCxxx0_FSTEST,   rfSettings.FSTEST);
+ 495   1          halSpiWriteReg(CCxxx0_TEST2,    rfSettings.TEST2);
+ 496   1          halSpiWriteReg(CCxxx0_TEST1,    rfSettings.TEST1);
+ 497   1          halSpiWriteReg(CCxxx0_TEST0,    rfSettings.TEST0);
+ 498   1          halSpiWriteReg(CCxxx0_IOCFG2,   rfSettings.IOCFG2);
+ 499   1          halSpiWriteReg(CCxxx0_IOCFG0,   rfSettings.IOCFG0);    
+ 500   1          halSpiWriteReg(CCxxx0_PKTCTRL1, rfSettings.PKTCTRL1);
+ 501   1          halSpiWriteReg(CCxxx0_PKTCTRL0, rfSettings.PKTCTRL0);
+ 502   1          halSpiWriteReg(CCxxx0_ADDR,     rfSettings.ADDR);
+ 503   1          halSpiWriteReg(CCxxx0_PKTLEN,   rfSettings.PKTLEN);
+ 504   1      }
+ 505          
+ 506          //*****************************************************************************************
+ 507          //函数名：void halRfSendPacket(INT8U *txBuffer, INT8U size)
+ 508          //输入：发送的缓冲区，发送数据个数
+ 509          //输出：无
+ 510          //功能描述：CC1100发送一组数据
+ 511          //*****************************************************************************************
+ 512          
+ 513          void halRfSendPacket(INT8U *txBuffer, INT8U size) 
+ 514          {
+ 515   1              halSpiWriteReg(CCxxx0_TXFIFO, size);
+ 516   1          halSpiWriteBurstReg(CCxxx0_TXFIFO, txBuffer, size); //写入要发送的数据
+ 517   1      
+ 518   1          halSpiStrobe(CCxxx0_STX);           //进入发送模式发送数据
+ 519   1      
+ 520   1          // Wait for GDO0 to be set -> sync transmitted
+ 521   1          while (!GDO0);
+ 522   1          // Wait for GDO0 to be cleared -> end of packet
+ 523   1          while (GDO0);
+ 524   1              halSpiStrobe(CCxxx0_SFTX);
+ 525   1      }
+ 526          
+ 527          
+ 528          void setRxMode(void)
+ 529          {
+ 530   1          halSpiStrobe(CCxxx0_SRX);           //进入接收状态
+ 531   1      }
+ 532          //---------------------------------------------------------------------------
+ 533          INT8U halRfReceivePacket(INT8U *rxBuffer, INT8U *length) 
+ 534          {
+ 535   1          INT8U status[2];
+ 536   1          INT8U packetLength;
+ 537   1              INT8U i=(*length)*4;  // 具体多少要根据datarate和length来决定
+ 538   1      
+ 539   1          halSpiStrobe(CCxxx0_SRX);           //进入接收状态
+ 540   1              //delay(5);
+ 541   1          //while (!GDO1);
+ 542   1          //while (GDO1);
+ 543   1              delay(2);
+ 544   1              while (GDO0)
+ 545   1              {
+ 546   2                      delay(2);
+ 547   2                      --i;
+ 548   2                      if(i<1)
+ 549   2                         return 0;        
+C51 COMPILER V7.06   1100                                                                  12/20/2007 00:50:10 PAGE 10  
+
+ 550   2              }        
+ 551   1          if ((halSpiReadStatus(CCxxx0_RXBYTES) & BYTES_IN_RXFIFO)) //如果接的字节数不为0
+ 552   1              {
+ 553   2              packetLength = halSpiReadReg(CCxxx0_RXFIFO);//读出第一个字节，此字节为该帧数据长度
+ 554   2              if (packetLength <= *length)            //如果所要的有效数据长度小于等于接收到的数据包的长度
+ 555   2                      {
+ 556   3                  halSpiReadBurstReg(CCxxx0_RXFIFO, rxBuffer, packetLength); //读出所有接收到的数据
+ 557   3                  *length = packetLength;                             //把接收数据长度的修改为当前数据的长度
+ 558   3              
+ 559   3                  // Read the 2 appended status bytes (status[0] = RSSI, status[1] = LQI)
+ 560   3                  halSpiReadBurstReg(CCxxx0_RXFIFO, status, 2);       //读出CRC校验位
+ 561   3                              halSpiStrobe(CCxxx0_SFRX);              //清洗接收缓冲区
+ 562   3                  return (status[1] & CRC_OK);                        //如果校验成功返回接收成功
+ 563   3              }
+ 564   2                       else 
+ 565   2                      {
+ 566   3                  *length = packetLength;
+ 567   3                  halSpiStrobe(CCxxx0_SFRX);          //清洗接收缓冲区
+ 568   3                  return 0;
+ 569   3              }
+ 570   2          } 
+ 571   1              else
+ 572   1              return 0;
+ 573   1      }
+ 574          //*****************************************************************************************
+ 575          void disdignit()
+ 576          {
+ 577   1              char i;
+ 578   1              if(temp[0])
+ 579   1              {
+ 580   2              for(i=0;i<3;i++)
+ 581   2                      {
+ 582   3                              P0=0xC6;
+ 583   3                              led0=0;
+ 584   3                              delay1(40);
+ 585   3                              led0=1;
+ 586   3                              P0=seg[temp[1]];
+ 587   3                              led1=0;
+ 588   3                              delay1(40);
+ 589   3                              led1=1;
+ 590   3                                      P0=seg1[temp[5]];
+ 591   3                                      led2=0;
+ 592   3                              delay1(40);
+ 593   3                              led2=1;
+ 594   3                                      P0=seg[temp[4]];
+ 595   3                              led3=0;
+ 596   3                                      delay1(40);
+ 597   3                                      led3=1;
+ 598   3                              }
+ 599   2                              }
+ 600   1      }
+ 601          //********************************************************************************
+ 602          void StartUART( void )
+ 603          {                                                       //波特率4800
+ 604   1           SCON = 0x50;
+ 605   1           TMOD = 0x20;
+ 606   1           TH1 = 0xFA;
+ 607   1           TL1 = 0xFA;
+ 608   1           PCON = 0x00;
+ 609   1           TR1 = 1;
+ 610   1      }
+ 611          void R_S_Byte(INT8U R_Byte)
+C51 COMPILER V7.06   1100                                                                  12/20/2007 00:50:10 PAGE 11  
+
+ 612          {       
+ 613   1               SBUF = R_Byte;  
+ 614   1           while( TI == 0 );                          //查询法
+ 615   1               TI = 0;
+ 616   1           
+ 617   1      }
+ 618          void main(void)
+ 619          {
+ 620   1              INT8U i,leng =0;
+ 621   1              INT8U RxBuf[8]={0};     // 8字节, 如果需要更长的数据包,请正确设置
+ 622   1              CpuInit();
+ 623   1              POWER_UP_RESET_CC1100();
+ 624   1              halRfWriteRfSettings();
+ 625   1              halSpiWriteBurstReg(CCxxx0_PATABLE, PaTabel, 8);//发射功率设置
+ 626   1              delay(6000);
+ 627   1              StartUART();
+ 628   1              while(1)
+ 629   1              {
+ 630   2                      leng =4; // 预计接受8 bytes
+ 631   2                      if(halRfReceivePacket(RxBuf,&leng))  //判断是否接收到数据
+ 632   2                      {
+ 633   3                      temp[0]=RxBuf[3];      //符号位
+ 634   3                      temp[2]=((RxBuf[2]<<4)|RxBuf[1]);               //整数位
+ 635   3                      temp[1]=RxBuf[0];                                                       //小数位
+ 636   3                      temp[4]=RxBuf[2];                                                       //十位
+ 637   3                      temp[5]=RxBuf[1];
+ 638   3                      for(i=0;i<3;i++)
+ 639   3                      {
+ 640   4                      R_S_Byte(temp[2-i])     ;       
+ 641   4                      delay(100);
+ 642   4                      }
+ 643   3                       disdignit();
+ 644   3                      }
+ 645   2              }
+ 646   1              
+ 647   1      }
+ 648          
+ 649          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1015    ----
+   CONSTANT SIZE    =      8    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     79      29
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

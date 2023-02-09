@@ -1,0 +1,8 @@
+Added Component: Designator=J2(IPEX)
+Add component. Clean all parameters for all variants
+Added Pin To Net: NetName=DGND Pin=J2-0
+Added Pin To Net: NetName=DGND Pin=J2-2
+Change Net Name : Old Net Name=NetC5_2 New Net Name=NetC1_1
+Added Pin To Net: NetName=NetC1_2 Pin=J2-1
+Added Net: Name=NetC1_2
+Added Member To Class: ClassName=RF-433RX Member=Component J2 SMA

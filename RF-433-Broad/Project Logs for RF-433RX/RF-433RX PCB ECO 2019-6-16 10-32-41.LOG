@@ -1,0 +1,17 @@
+Removed Pin From Net: NetName=DGND Pin=ANT1-2
+Removed Pin From Net: NetName=DGND Pin=ANT1-2
+Removed Pin From Net: NetName=DGND Pin=ANT1-2
+Removed Pin From Net: NetName=DGND Pin=ANT1-2
+Removed Pin From Net: NetName=DGND Pin=U7-0
+Removed Pin From Net: NetName=DGND Pin=U7-0
+Removed Member From Class: ClassName=RF-433RX Member=ANT1
+Added Component: Designator=J1(SMA-ANT-SMT)
+Add component. Clean all parameters for all variants
+Added Pin To Net: NetName=DGND Pin=J1-0
+Added Pin To Net: NetName=DGND Pin=J1-0
+Added Pin To Net: NetName=DGND Pin=J1-0
+Added Pin To Net: NetName=DGND Pin=J1-2
+Added Pin To Net: NetName=NetC5_1 Pin=C5-1
+Added Pin To Net: NetName=NetC5_1 Pin=J1-1
+Added Net: Name=NetC5_1
+Added Member To Class: ClassName=RF-433RX Member=Component J1 SMA

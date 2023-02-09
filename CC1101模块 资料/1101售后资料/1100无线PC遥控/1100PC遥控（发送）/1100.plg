@@ -1,0 +1,51 @@
+<html>
+<body>
+<pre>
+<h1>礦ision2 Build Log</h1>
+<h2>Project:</h2>
+F:\开发板配套资料\JASK2000软件开发包\JASK-1100实例源代码\复件 1100双向遥控\1100.uv2
+Project File Date:  12/08/2007
+
+<h2>Output:</h2>
+Build target 'Target 1'
+compiling 1100.c...
+1100.C(670): warning C214: 'Argument': conversion: pointer to non-pointer
+1100.C(690): warning C214: 'Argument': conversion: pointer to non-pointer
+1100.C(707): warning C214: 'Argument': conversion: pointer to non-pointer
+1100.C(724): warning C214: 'Argument': conversion: pointer to non-pointer
+1100.C(741): warning C214: 'Argument': conversion: pointer to non-pointer
+1100.C(758): warning C214: 'Argument': conversion: pointer to non-pointer
+1100.C(775): warning C214: 'Argument': conversion: pointer to non-pointer
+1100.C(792): warning C214: 'Argument': conversion: pointer to non-pointer
+1100.C(809): warning C214: 'Argument': conversion: pointer to non-pointer
+1100.C(826): warning C214: 'Argument': conversion: pointer to non-pointer
+1100.C(830): error C141: syntax error near ''
+Target not created
+Build target 'Target 1'
+compiling 1100.c...
+1100.C(670): warning C214: 'Argument': conversion: pointer to non-pointer
+1100.C(690): warning C214: 'Argument': conversion: pointer to non-pointer
+1100.C(707): warning C214: 'Argument': conversion: pointer to non-pointer
+1100.C(724): warning C214: 'Argument': conversion: pointer to non-pointer
+1100.C(741): warning C214: 'Argument': conversion: pointer to non-pointer
+1100.C(758): warning C214: 'Argument': conversion: pointer to non-pointer
+1100.C(775): warning C214: 'Argument': conversion: pointer to non-pointer
+1100.C(792): warning C214: 'Argument': conversion: pointer to non-pointer
+1100.C(809): warning C214: 'Argument': conversion: pointer to non-pointer
+1100.C(826): warning C214: 'Argument': conversion: pointer to non-pointer
+1100.C(830): error C141: syntax error near ''
+Target not created
+Build target 'Target 1'
+compiling 1100.c...
+1100.C(830): error C141: syntax error near ''
+Target not created
+Build target 'Target 1'
+compiling 1100.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?SETRXMODE?1100
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_HALRFRECEIVEPACKET?1100
+Program Size: data=94.0 xdata=0 code=1930
+creating hex file from "1100"...
+"1100" - 0 Error(s), 2 Warning(s).

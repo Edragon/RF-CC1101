@@ -1,0 +1,20 @@
+实现两个电脑之间双向通信
+
+1.	将改51-JASK2000配套代码和ARM-JASK2132配套代码，分别下载到JASK2000和JASK2132开发板中
+2.	准备2台电脑，以PC--USB/TTL模块--JASK2000, PC--USB/TTL模块--JASK2132方式连接
+3.	然后按照截图进行操作，可以看到电脑之间无线通信
+
+
+欢迎交流，愿与您一起走向成功
+
+QQ:　35625400　			 MSN:　ll88mm88@hotmail.com 
+邮箱:chj_006@sina.com		 电话:　13704018223     陈工
+
+ARM&FR嵌入式短距离无线通信技术
+http://shop35079098.taobao.com/shop/xshop/wui_page-15620063.htm
+
+无线云台控制视频
+http://v.youku.com/v_show/id_XMTI0MjMzOTg4.html
+
+无线机器人视频
+http://www.tudou.com/programs/view/P6oG2gLdRL4/

@@ -1,0 +1,132 @@
+<html>
+<body>
+<pre>
+<h1>礦ision2 Build Log</h1>
+<h2>Project:</h2>
+F:\开发板配套资料\JASK2000软件开发包\JASK-1100实例源代码\复件 复件 1100双向遥控\1100.uv2
+Project File Date:  12/08/2007
+
+<h2>Output:</h2>
+Build target 'Target 1'
+compiling 1100.c...
+1100.C(659): error C202: 'TxRxBuffer': undefined identifier
+Target not created
+Build target 'Target 1'
+compiling 1100.c...
+1100.C(663): warning C206: 'delay1': missing function-prototype
+1100.C(663): error C267: 'delay1': requires ANSI-style prototype
+1100.C(722): error C141: syntax error near '/'
+Target not created
+Build target 'Target 1'
+compiling 1100.c...
+1100.C(232): error C141: syntax error near 'i', expected ')'
+Target not created
+Build target 'Target 1'
+compiling 1100.c...
+1100.C(727): error C141: syntax error near '/'
+Target not created
+Build target 'Target 1'
+compiling 1100.c...
+1100.C(642): warning C280: 'i': unreferenced local variable
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_HALRFSENDPACKET?1100
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?SETRXMODE?1100
+Program Size: data=89.0 xdata=0 code=1691
+creating hex file from "1100"...
+"1100" - 0 Error(s), 3 Warning(s).
+Build target 'Target 1'
+compiling 1100.c...
+1100.C(642): warning C280: 'i': unreferenced local variable
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_HALRFSENDPACKET?1100
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?SETRXMODE?1100
+Program Size: data=89.0 xdata=0 code=1691
+creating hex file from "1100"...
+"1100" - 0 Error(s), 3 Warning(s).
+Build target 'Target 1'
+compiling 1100.c...
+1100.C(642): warning C280: 'i': unreferenced local variable
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_HALRFSENDPACKET?1100
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?SETRXMODE?1100
+Program Size: data=89.0 xdata=0 code=1691
+creating hex file from "1100"...
+"1100" - 0 Error(s), 3 Warning(s).
+Build target 'Target 1'
+compiling 1100.c...
+1100.C(642): warning C280: 'i': unreferenced local variable
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_HALRFSENDPACKET?1100
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?SETRXMODE?1100
+Program Size: data=89.0 xdata=0 code=1688
+creating hex file from "1100"...
+"1100" - 0 Error(s), 3 Warning(s).
+Build target 'Target 1'
+compiling 1100.c...
+1100.C(642): warning C280: 'i': unreferenced local variable
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_HALRFSENDPACKET?1100
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?SETRXMODE?1100
+Program Size: data=89.0 xdata=0 code=1686
+creating hex file from "1100"...
+"1100" - 0 Error(s), 3 Warning(s).
+Build target 'Target 1'
+compiling 1100.c...
+1100.C(642): warning C280: 'i': unreferenced local variable
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_HALRFSENDPACKET?1100
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?SETRXMODE?1100
+Program Size: data=89.0 xdata=0 code=1689
+creating hex file from "1100"...
+"1100" - 0 Error(s), 3 Warning(s).
+Build target 'Target 1'
+compiling 1100.c...
+1100.C(642): warning C280: 'i': unreferenced local variable
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_HALRFSENDPACKET?1100
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?SETRXMODE?1100
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?UART_INIT?1100
+Program Size: data=89.0 xdata=0 code=1686
+creating hex file from "1100"...
+"1100" - 0 Error(s), 4 Warning(s).
+Build target 'Target 1'
+compiling 1100.c...
+1100.C(642): warning C280: 'i': unreferenced local variable
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_HALRFSENDPACKET?1100
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?SETRXMODE?1100
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?UART_INIT?1100
+Program Size: data=89.0 xdata=0 code=1686
+creating hex file from "1100"...
+"1100" - 0 Error(s), 4 Warning(s).
+Build target 'Target 1'
+compiling 1100.c...
+1100.C(642): warning C280: 'i': unreferenced local variable
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_HALRFSENDPACKET?1100
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?SETRXMODE?1100
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?UART_INIT?1100
+Program Size: data=89.0 xdata=0 code=1687
+creating hex file from "1100"...
+"1100" - 0 Error(s), 4 Warning(s).
